@@ -51,7 +51,7 @@ class DLL(object):
     def __init__(self, libinfo, libnames, path=None):
         self._dll = None
         foundlibs = _findlib(libnames, path)
-        dllmsg = "PYSDL2_DLL_PATH: %s" % (os.getenv("PYSDL2_DLL_PATH") or "unset")
+        dllmsg = "PYSDL2_DLL_PATH: %s" % (os.getenv("PYSDL2_DLL_PATH") or lib_path())
         if len(foundlibs) == 0:
             raise RuntimeError("could not find any library for %s (%s)" %
                                (libinfo, dllmsg))
@@ -112,8 +112,24 @@ def nullfunc(*args):
     """A simple no-op function to be used as dll replacement."""
     return
 
+
+def lib_path():
+    platform = sys.platform
+    prefix = "../lib/"
+    if platform in ("win32", "cli"):
+        # windows is 32-bit only right now
+        return prefix + "win/x86_32"
+    elif platform == "darwin":
+        # TODO: Not sure what magic we need for mac, if any
+        #return prefix + "mac"
+        pass
+    else:
+        # TODO: We don't have a bundled linux lib yet
+        #return prefix + "linux/x86_64"
+        pass
+
 try:
-    dll = DLL("SDL2", ["SDL2", "SDL2-2.0"], os.getenv("PYSDL2_DLL_PATH"))
+    dll = DLL("SDL2", ["SDL2", "SDL2-2.0"], os.getenv("PYSDL2_DLL_PATH") or lib_path())
 except RuntimeError as exc:
     raise ImportError(exc)
 

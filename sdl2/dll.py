@@ -1,5 +1,6 @@
 """DLL wrapper"""
 import os
+import platform
 import sys
 import warnings
 from ctypes import CDLL
@@ -113,20 +114,23 @@ def nullfunc(*args):
     return
 
 
+def find_basedir():
+    path_list = os.getcwd().split(os.path.sep)
+    index = len(path_list)-1
+    while 'lib' not in set(d for d in os.listdir(os.path.sep.join(path_list[:index]))):
+        index -= 1
+    return os.path.sep.join(path_list[:index])
+
+
 def lib_path():
-    platform = sys.platform
-    prefix = "../lib/"
-    if platform in ("win32", "cli"):
-        # windows is 32-bit only right now
-        return prefix + "win/x86_32"
+    prefix = os.path.sep.join([find_basedir(), 'lib', ''])
+    arch = platform.architecture()[0]
+    if sys.platform in ("win32", "cli"):
+        return prefix + os.path.sep.join(['win', arch])
     elif platform == "darwin":
-        # TODO: Not sure what magic we need for mac, if any
-        #return prefix + "mac"
-        pass
+        return prefix + os.path.sep.join(['mac'])
     else:
-        # TODO: We don't have a bundled linux lib yet
-        #return prefix + "linux/x86_64"
-        pass
+        return prefix + os.path.sep.join(['linux', arch])
 
 try:
     dll = DLL("SDL2", ["SDL2", "SDL2-2.0"], os.getenv("PYSDL2_DLL_PATH") or lib_path())
